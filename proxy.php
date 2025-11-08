@@ -25,8 +25,21 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Prefer secure endpoint; fallback is legacy same path
 $EXPENSIFY_API_URL = 'https://www.expensify.com/api';
-$PARTNER_NAME = 'applicant';
-$PARTNER_PASSWORD = 'd7c3119c6cdab02d68d9';
+// Load partner credentials from environment variables for security.
+// Configure these in your hosting platform (e.g., Render) as environment variables:
+//   PARTNER_NAME=applicant
+//   PARTNER_PASSWORD=...secret...
+// For local development, you may set them in your shell before starting PHP.
+// As a last resort (not recommended), you can hardcode fallback values here.
+$PARTNER_NAME = getenv('PARTNER_NAME') ?: 'applicant';
+$PARTNER_PASSWORD = getenv('PARTNER_PASSWORD') ?: '';
+if ($PARTNER_PASSWORD === '') {
+    // Fail fast if secret missing; prevents accidental public deployments with blank password
+    http_response_code(500);
+    header('Cache-Control: no-store');
+    echo json_encode(['error' => 'Server misconfiguration: PARTNER_PASSWORD not set']);
+    exit;
+}
 
 // Same-origin enforcement: if Origin header is present, require host to match
 $originOk = true;
